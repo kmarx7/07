@@ -750,7 +750,7 @@
     let lanes = [];
     let raceFrame = 0;
     let running = false;
-    let activeCategory = "전체";
+    let activeCategories = new Set();
     let selectedIds = new Set(defaultSelectedIds);
 
     function selectedMenus() {
@@ -760,7 +760,7 @@
     function filteredMenus() {
       const query = menuSearch.value.trim().toLowerCase();
       return menus.filter((menu) => {
-        const categoryMatch = activeCategory === "전체" || menu.category === activeCategory;
+        const categoryMatch = activeCategories.size === 0 || activeCategories.has(menu.category);
         const queryMatch = !query || `${menu.name} ${menu.category}`.toLowerCase().includes(query);
         return categoryMatch && queryMatch;
       });
@@ -778,9 +778,17 @@
         button.className = "category-button";
         button.type = "button";
         button.textContent = category;
-        button.classList.toggle("active", category === activeCategory);
+        const isActive = category === "전체" ? activeCategories.size === 0 : activeCategories.has(category);
+        button.classList.toggle("active", isActive);
+        button.setAttribute("aria-pressed", String(isActive));
         button.addEventListener("click", () => {
-          activeCategory = category;
+          if (category === "전체") {
+            activeCategories.clear();
+          } else if (activeCategories.has(category)) {
+            activeCategories.delete(category);
+          } else {
+            activeCategories.add(category);
+          }
           renderCategories();
           renderPicker();
         });
