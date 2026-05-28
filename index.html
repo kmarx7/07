@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>오늘 점심 레이스</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #1e2428;
+      --muted: #68737d;
+      --line: #d7dee4;
+      --track: #f4f7f9;
+      --accent: #ef4f35;
+      --accent-dark: #c43e28;
+      --green: #1f9d68;
+      --blue: #2878d4;
+      --yellow: #f5b942;
+      --panel: #ffffff;
+      --shadow: 0 18px 45px rgba(27, 39, 51, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        linear-gradient(120deg, rgba(239, 79, 53, 0.08), transparent 36%),
+        linear-gradient(300deg, rgba(31, 157, 104, 0.10), transparent 38%),
+        #fbfcfd;
+    }
+
+    main {
+      width: min(1120px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 34px 0 44px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 22px;
+    }
+
+    h1 {
+      margin: 0 0 7px;
+      font-size: clamp(30px, 5vw, 58px);
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 17px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    button {
+      appearance: none;
+      border: 0;
+      border-radius: 8px;
+      min-height: 44px;
+      padding: 0 16px;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    .primary {
+      color: white;
+      background: var(--accent);
+      box-shadow: 0 10px 20px rgba(239, 79, 53, 0.24);
+    }
+
+    .primary:hover {
+      background: var(--accent-dark);
+    }
+
+    .secondary {
+      color: var(--ink);
+      background: #e9eef2;
+    }
+
+    .secondary:hover {
+      background: #dce4eb;
+    }
+
+    .race-shell {
+      display: grid;
+      grid-template-columns: 1fr 284px;
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .race-board,
+    .result-panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: var(--shadow);
+    }
+
+    .race-board {
+      position: relative;
+      overflow: hidden;
+      padding: 22px 24px 26px 18px;
+      min-height: 612px;
+    }
+
+    .finish-line {
+      position: absolute;
+      top: 18px;
+      bottom: 18px;
+      right: 58px;
+      width: 5px;
+      border-radius: 99px;
+      background: repeating-linear-gradient(
+        to bottom,
+        #1f252b 0 14px,
+        #ffffff 14px 28px
+      );
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+      z-index: 1;
+    }
+
+    .finish-label {
+      position: absolute;
+      top: 18px;
+      right: 24px;
+      z-index: 2;
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .lane {
+      position: relative;
+      display: grid;
+      grid-template-columns: 96px 1fr;
+      align-items: center;
+      gap: 12px;
+      height: 74px;
+      margin-bottom: 13px;
+      isolation: isolate;
+    }
+
+    .lane-name {
+      min-width: 0;
+      font-weight: 800;
+      font-size: 16px;
+      text-align: right;
+      word-break: keep-all;
+      line-height: 1.15;
+    }
+
+    .track {
+      position: relative;
+      height: 56px;
+      border: 1px solid #dfe6ec;
+      border-radius: 8px;
+      background:
+        linear-gradient(90deg, rgba(255, 255, 255, 0.8), transparent 60%),
+        repeating-linear-gradient(90deg, transparent 0 31px, rgba(40, 120, 212, 0.08) 31px 32px),
+        var(--track);
+      overflow: hidden;
+    }
+
+    .runner {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      display: grid;
+      place-items: center;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      font-size: 34px;
+      transform: translate3d(0, -50%, 0);
+      filter: drop-shadow(0 8px 8px rgba(27, 39, 51, 0.16));
+      transition: transform 120ms linear;
+      will-change: transform;
+      z-index: 2;
+    }
+
+    .runner::after {
+      content: "";
+      position: absolute;
+      inset: 7px 4px auto auto;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.65);
+      pointer-events: none;
+    }
+
+    .lane.leading .track {
+      border-color: rgba(239, 79, 53, 0.55);
+      box-shadow: inset 0 0 0 2px rgba(239, 79, 53, 0.12);
+    }
+
+    .lane.leading .runner {
+      animation: bounce 360ms ease-in-out infinite alternate;
+    }
+
+    .lane.winner .track {
+      border-color: rgba(31, 157, 104, 0.8);
+      background:
+        repeating-linear-gradient(90deg, rgba(31, 157, 104, 0.12) 0 18px, transparent 18px 36px),
+        #f4fbf7;
+    }
+
+    .lane.winner .runner {
+      animation: winnerPop 700ms ease both;
+    }
+
+    @keyframes bounce {
+      from {
+        margin-top: -2px;
+      }
+      to {
+        margin-top: 4px;
+      }
+    }
+
+    @keyframes winnerPop {
+      0% {
+        scale: 1;
+      }
+      45% {
+        scale: 1.34;
+      }
+      100% {
+        scale: 1.12;
+      }
+    }
+
+    .result-panel {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 612px;
+    }
+
+    .result-title {
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .winner-emoji {
+      display: grid;
+      place-items: center;
+      width: 138px;
+      height: 138px;
+      margin: 14px auto 18px;
+      border-radius: 50%;
+      background: #fff4df;
+      font-size: 74px;
+      box-shadow: inset 0 0 0 1px rgba(245, 185, 66, 0.38);
+    }
+
+    .winner-name {
+      margin: 0;
+      font-size: 34px;
+      line-height: 1.08;
+      text-align: center;
+      word-break: keep-all;
+    }
+
+    .winner-copy {
+      min-height: 54px;
+      margin: 16px 0 0;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.45;
+      text-align: center;
+    }
+
+    .stats {
+      display: grid;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .stat {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 0;
+      border-top: 1px solid #e5ebf0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .stat strong {
+      color: var(--ink);
+      font-size: 17px;
+    }
+
+    .menu-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      min-height: 32px;
+      padding: 5px 9px;
+      border: 1px solid #e1e8ee;
+      border-radius: 999px;
+      background: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      color: #3b454d;
+    }
+
+    @media (max-width: 860px) {
+      main {
+        width: min(100vw - 22px, 680px);
+        padding-top: 24px;
+      }
+
+      .topbar {
+        display: block;
+      }
+
+      .actions {
+        justify-content: stretch;
+        margin-top: 18px;
+      }
+
+      button {
+        flex: 1 1 150px;
+      }
+
+      .race-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .race-board {
+        min-height: auto;
+        padding: 18px 16px 18px 10px;
+      }
+
+      .result-panel {
+        min-height: auto;
+      }
+
+      .lane {
+        grid-template-columns: 72px 1fr;
+        gap: 8px;
+        height: 64px;
+        margin-bottom: 10px;
+      }
+
+      .lane-name {
+        font-size: 13px;
+      }
+
+      .track {
+        height: 48px;
+      }
+
+      .runner {
+        width: 44px;
+        height: 44px;
+        font-size: 29px;
+      }
+
+      .finish-line {
+        right: 42px;
+      }
+
+      .finish-label {
+        right: 13px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="topbar" aria-label="점심 메뉴 레이스">
+      <div>
+        <h1>오늘 점심 레이스</h1>
+        <p class="subtitle">식품 이모지가 결승선을 통과하면 오늘의 메뉴가 결정됩니다.</p>
+      </div>
+      <div class="actions">
+        <button class="primary" id="startButton" type="button">레이스 시작</button>
+        <button class="secondary" id="resetButton" type="button">다시 섞기</button>
+      </div>
+    </section>
+
+    <section class="race-shell">
+      <div class="race-board" id="raceBoard" aria-live="polite">
+        <div class="finish-label" aria-hidden="true">🏁</div>
+        <div class="finish-line" aria-hidden="true"></div>
+      </div>
+
+      <aside class="result-panel">
+        <div>
+          <p class="result-title">Winner</p>
+          <div class="winner-emoji" id="winnerEmoji">🍽️</div>
+          <h2 class="winner-name" id="winnerName">출발 대기</h2>
+          <p class="winner-copy" id="winnerCopy">버튼을 누르면 메뉴들이 달리기 시작합니다.</p>
+          <div class="stats">
+            <div class="stat">
+              <span>현재 선두</span>
+              <strong id="leaderName">-</strong>
+            </div>
+            <div class="stat">
+              <span>참가 메뉴</span>
+              <strong id="menuCount">8개</strong>
+            </div>
+          </div>
+        </div>
+        <div class="menu-list" id="menuList" aria-label="참가 메뉴 목록"></div>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const menus = [
+      { name: "김치찌개", emoji: "🍲", note: "뜨끈하고 든든한 한식 승자입니다." },
+      { name: "돈까스", emoji: "🍛", note: "바삭한 점심이 필요한 날입니다." },
+      { name: "쌀국수", emoji: "🍜", note: "국물과 향이 깔끔하게 들어옵니다." },
+      { name: "햄버거", emoji: "🍔", note: "빠르고 확실한 선택입니다." },
+      { name: "초밥", emoji: "🍣", note: "가볍지만 기분 좋은 점심입니다." },
+      { name: "피자", emoji: "🍕", note: "나눠 먹기 좋은 메뉴가 걸렸습니다." },
+      { name: "샐러드", emoji: "🥗", note: "가볍게 먹고 오후를 버티기 좋습니다." },
+      { name: "비빔밥", emoji: "🥘", note: "한 그릇에 균형 있게 담긴 선택입니다." }
+    ];
+
+    const board = document.querySelector("#raceBoard");
+    const startButton = document.querySelector("#startButton");
+    const resetButton = document.querySelector("#resetButton");
+    const winnerEmoji = document.querySelector("#winnerEmoji");
+    const winnerName = document.querySelector("#winnerName");
+    const winnerCopy = document.querySelector("#winnerCopy");
+    const leaderName = document.querySelector("#leaderName");
+    const menuCount = document.querySelector("#menuCount");
+    const menuList = document.querySelector("#menuList");
+
+    let lanes = [];
+    let raceFrame = 0;
+    let running = false;
+
+    function createLane(menu, index) {
+      const lane = document.createElement("div");
+      lane.className = "lane";
+      lane.dataset.index = String(index);
+
+      const label = document.createElement("div");
+      label.className = "lane-name";
+      label.textContent = menu.name;
+
+      const track = document.createElement("div");
+      track.className = "track";
+
+      const runner = document.createElement("div");
+      runner.className = "runner";
+      runner.textContent = menu.emoji;
+      runner.setAttribute("aria-label", `${menu.name} 주자`);
+
+      track.append(runner);
+      lane.append(label, track);
+      return { menu, lane, track, runner, progress: 0, speed: 0, finished: false };
+    }
+
+    function renderMenus() {
+      board.querySelectorAll(".lane").forEach((lane) => lane.remove());
+      menuList.innerHTML = "";
+      lanes = menus.map(createLane);
+
+      lanes.forEach((entry) => {
+        board.append(entry.lane);
+        const chip = document.createElement("span");
+        chip.className = "chip";
+        chip.textContent = `${entry.menu.emoji} ${entry.menu.name}`;
+        menuList.append(chip);
+      });
+
+      menuCount.textContent = `${lanes.length}개`;
+      updateRunnerPositions();
+    }
+
+    function updateRunnerPositions() {
+      lanes.forEach((entry) => {
+        const finishX = Math.max(0, entry.track.clientWidth - 70);
+        const x = Math.min(entry.progress, 100) / 100 * finishX;
+        entry.runner.style.transform = `translate3d(${x}px, -50%, 0)`;
+      });
+    }
+
+    function setResult(menu) {
+      winnerEmoji.textContent = menu.emoji;
+      winnerName.textContent = menu.name;
+      winnerCopy.textContent = menu.note;
+    }
+
+    function resetRace() {
+      cancelAnimationFrame(raceFrame);
+      running = false;
+      startButton.disabled = false;
+      startButton.textContent = "레이스 시작";
+      winnerEmoji.textContent = "🍽️";
+      winnerName.textContent = "출발 대기";
+      winnerCopy.textContent = "버튼을 누르면 메뉴들이 달리기 시작합니다.";
+      leaderName.textContent = "-";
+
+      lanes.forEach((entry) => {
+        entry.progress = 0;
+        entry.speed = 0.42 + Math.random() * 0.38;
+        entry.finished = false;
+        entry.lane.classList.remove("leading", "winner");
+      });
+
+      updateRunnerPositions();
+    }
+
+    function pickWinner() {
+      return lanes[Math.floor(Math.random() * lanes.length)];
+    }
+
+    function startRace() {
+      if (running) return;
+
+      resetRace();
+      running = true;
+      startButton.disabled = true;
+      startButton.textContent = "달리는 중";
+
+      const winner = pickWinner();
+      const startTime = performance.now();
+      const duration = 5200 + Math.random() * 1400;
+
+      function tick(now) {
+        const elapsed = now - startTime;
+        const t = Math.min(elapsed / duration, 1);
+        const endBoost = t > 0.72 ? (t - 0.72) / 0.28 : 0;
+
+        lanes.forEach((entry) => {
+          const wobble = Math.sin((elapsed / 180) + entry.menu.name.length) * 0.28;
+          const burst = Math.random() * (t < 0.8 ? 0.82 : 0.28);
+          const winnerPull = entry === winner ? 0.25 + endBoost * 1.18 : 0;
+          const slowdown = t > 0.85 && entry !== winner ? 0.34 : 1;
+
+          entry.speed = Math.max(0.1, (0.44 + wobble + burst + winnerPull) * slowdown);
+          entry.progress = Math.min(100, entry.progress + entry.speed);
+
+          if (entry === winner && t > 0.88) {
+            entry.progress = Math.max(entry.progress, 92 + endBoost * 10);
+          }
+        });
+
+        const leader = lanes.reduce((best, entry) => entry.progress > best.progress ? entry : best, lanes[0]);
+        lanes.forEach((entry) => entry.lane.classList.toggle("leading", entry === leader));
+        leaderName.textContent = `${leader.menu.emoji} ${leader.menu.name}`;
+
+        updateRunnerPositions();
+
+        if (winner.progress >= 100 || t === 1) {
+          finishRace(winner);
+          return;
+        }
+
+        raceFrame = requestAnimationFrame(tick);
+      }
+
+      raceFrame = requestAnimationFrame(tick);
+    }
+
+    function finishRace(winner) {
+      running = false;
+      cancelAnimationFrame(raceFrame);
+
+      lanes.forEach((entry) => {
+        entry.lane.classList.remove("leading");
+        entry.lane.classList.toggle("winner", entry === winner);
+        if (entry === winner) entry.progress = 100;
+        else entry.progress = Math.min(entry.progress, 92 + Math.random() * 4);
+      });
+
+      leaderName.textContent = `${winner.menu.emoji} ${winner.menu.name}`;
+      setResult(winner.menu);
+      updateRunnerPositions();
+
+      startButton.disabled = false;
+      startButton.textContent = "다시 달리기";
+    }
+
+    startButton.addEventListener("click", startRace);
+    resetButton.addEventListener("click", resetRace);
+    window.addEventListener("resize", updateRunnerPositions);
+
+    renderMenus();
+    resetRace();
+  </script>
+</body>
+</html>
