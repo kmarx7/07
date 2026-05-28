@@ -980,8 +980,8 @@
       resetRace();
     }
 
-    function clearFilteredMenus() {
-      filteredMenus().forEach((menu) => selectedIds.delete(menu.id));
+    function clearAllMenus() {
+      selectedIds.clear();
       renderPicker();
       renderMenus();
       resetRace();
@@ -998,7 +998,7 @@
     startButton.addEventListener("click", startRace);
     resetButton.addEventListener("click", resetRace);
     selectAllButton.addEventListener("click", selectFilteredMenus);
-    clearButton.addEventListener("click", clearFilteredMenus);
+    clearButton.addEventListener("click", clearAllMenus);
     randomButton.addEventListener("click", selectRandomMenus);
     menuSearch.addEventListener("input", renderPicker);
     window.addEventListener("resize", updateRunnerPositions);
