@@ -42,15 +42,12 @@
     }
 
     .topbar {
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      align-items: end;
-      gap: 20px;
+      display: block;
+      text-align: center;
       margin-bottom: 22px;
     }
 
     .topbar > div:first-child {
-      grid-column: 2;
       text-align: center;
     }
 
@@ -72,7 +69,6 @@
       gap: 10px;
       flex-wrap: wrap;
       justify-content: flex-end;
-      grid-column: 3;
     }
 
     button {
@@ -334,6 +330,14 @@
       margin-top: 16px;
     }
 
+    .result-actions {
+      margin-top: 18px;
+    }
+
+    .result-actions button {
+      flex: 1 1 118px;
+    }
+
     .chip {
       display: inline-flex;
       align-items: center;
@@ -574,10 +578,6 @@
         <h1>오늘 점심 레이스</h1>
         <p class="subtitle">식품 이모지가 결승선을 통과하면 오늘의 메뉴가 결정됩니다.</p>
       </div>
-      <div class="actions">
-        <button class="primary" id="startButton" type="button">레이스 시작</button>
-        <button class="secondary" id="resetButton" type="button">다시 섞기</button>
-      </div>
     </section>
 
     <section class="picker-panel" aria-label="참가 메뉴 선택">
@@ -621,6 +621,10 @@
           </div>
         </div>
         <div class="menu-list" id="menuList" aria-label="참가 메뉴 목록"></div>
+        <div class="actions result-actions">
+          <button class="primary" id="startButton" type="button">레이스 시작</button>
+          <button class="secondary" id="resetButton" type="button">다시 섞기</button>
+        </div>
       </aside>
     </section>
   </main>
