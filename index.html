@@ -124,6 +124,8 @@
       overflow: hidden;
       padding: 22px 24px 26px 18px;
       min-height: 612px;
+      max-height: 690px;
+      overflow-y: auto;
     }
 
     .finish-line {
@@ -340,6 +342,146 @@
       color: #3b454d;
     }
 
+    .picker-panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: var(--shadow);
+      margin-bottom: 18px;
+      padding: 16px;
+    }
+
+    .picker-head {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .picker-title {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.1;
+    }
+
+    .picker-count {
+      color: var(--muted);
+      font-weight: 800;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .picker-tools {
+      display: grid;
+      grid-template-columns: minmax(180px, 1fr) auto;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .search-input {
+      width: 100%;
+      min-height: 44px;
+      border: 1px solid #d9e1e7;
+      border-radius: 8px;
+      padding: 0 13px;
+      font: inherit;
+      font-weight: 700;
+      color: var(--ink);
+      background: #fbfcfd;
+      outline: none;
+    }
+
+    .search-input:focus {
+      border-color: rgba(40, 120, 212, 0.7);
+      box-shadow: 0 0 0 3px rgba(40, 120, 212, 0.12);
+    }
+
+    .tool-buttons,
+    .category-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .small-button,
+    .category-button {
+      min-height: 38px;
+      padding: 0 12px;
+      border: 1px solid #dce4eb;
+      background: #fff;
+      color: #3c464e;
+      font-size: 14px;
+      box-shadow: none;
+    }
+
+    .small-button:hover,
+    .category-button:hover,
+    .category-button.active {
+      border-color: rgba(239, 79, 53, 0.55);
+      background: #fff4f1;
+      color: var(--accent-dark);
+    }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(126px, 1fr));
+      gap: 8px;
+      max-height: 284px;
+      overflow: auto;
+      padding: 2px;
+      margin-top: 12px;
+    }
+
+    .menu-option {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 42px;
+      border: 1px solid #e1e8ee;
+      border-radius: 8px;
+      background: #fff;
+      padding: 8px 10px;
+      cursor: pointer;
+      font-weight: 800;
+      line-height: 1.1;
+      user-select: none;
+      transition: border 150ms ease, background 150ms ease, transform 150ms ease;
+    }
+
+    .menu-option:hover {
+      transform: translateY(-1px);
+      border-color: rgba(40, 120, 212, 0.35);
+      background: #f7fbff;
+    }
+
+    .menu-option input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .menu-option .emoji {
+      font-size: 22px;
+      line-height: 1;
+      flex: 0 0 auto;
+    }
+
+    .menu-option .name {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 14px;
+    }
+
+    .menu-option:has(input:checked) {
+      border-color: rgba(31, 157, 104, 0.72);
+      background: #f0fbf5;
+      box-shadow: inset 0 0 0 1px rgba(31, 157, 104, 0.18);
+    }
+
     @media (max-width: 860px) {
       main {
         width: min(100vw - 22px, 680px);
@@ -363,8 +505,19 @@
         grid-template-columns: 1fr;
       }
 
+      .picker-head,
+      .picker-tools {
+        grid-template-columns: 1fr;
+      }
+
+      .menu-grid {
+        grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
+        max-height: 256px;
+      }
+
       .race-board {
         min-height: auto;
+        max-height: 560px;
         padding: 18px 16px 18px 10px;
       }
 
@@ -416,6 +569,23 @@
       </div>
     </section>
 
+    <section class="picker-panel" aria-label="참가 메뉴 선택">
+      <div class="picker-head">
+        <h2 class="picker-title">참가 메뉴 선택</h2>
+        <div class="picker-count" id="selectedCount">0개 선택</div>
+      </div>
+      <div class="picker-tools">
+        <input class="search-input" id="menuSearch" type="search" placeholder="메뉴 검색" autocomplete="off">
+        <div class="tool-buttons">
+          <button class="small-button" id="selectAllButton" type="button">전체 선택</button>
+          <button class="small-button" id="clearButton" type="button">전체 해제</button>
+          <button class="small-button" id="randomButton" type="button">랜덤 8개</button>
+        </div>
+      </div>
+      <div class="category-tabs" id="categoryTabs" aria-label="메뉴 카테고리"></div>
+      <div class="menu-grid" id="menuPicker"></div>
+    </section>
+
     <section class="race-shell">
       <div class="race-board" id="raceBoard" aria-live="polite">
         <div class="finish-label" aria-hidden="true">🏁</div>
@@ -445,20 +615,116 @@
   </main>
 
   <script>
+    const categories = ["전체", "한식", "면/국물", "일식", "중식", "서양식", "간편식", "가벼운식", "디저트"];
     const menus = [
-      { name: "김치찌개", emoji: "🍲", note: "뜨끈하고 든든한 한식 승자입니다." },
-      { name: "돈까스", emoji: "🍛", note: "바삭한 점심이 필요한 날입니다." },
-      { name: "쌀국수", emoji: "🍜", note: "국물과 향이 깔끔하게 들어옵니다." },
-      { name: "햄버거", emoji: "🍔", note: "빠르고 확실한 선택입니다." },
-      { name: "초밥", emoji: "🍣", note: "가볍지만 기분 좋은 점심입니다." },
-      { name: "피자", emoji: "🍕", note: "나눠 먹기 좋은 메뉴가 걸렸습니다." },
-      { name: "샐러드", emoji: "🥗", note: "가볍게 먹고 오후를 버티기 좋습니다." },
-      { name: "비빔밥", emoji: "🥘", note: "한 그릇에 균형 있게 담긴 선택입니다." }
+      { id: "kimchi-jjigae", category: "한식", name: "김치찌개", emoji: "🍲", note: "뜨끈하고 든든한 한식 승자입니다." },
+      { id: "doenjang-jjigae", category: "한식", name: "된장찌개", emoji: "🥘", note: "구수하게 속을 채우는 선택입니다." },
+      { id: "bibimbap", category: "한식", name: "비빔밥", emoji: "🥘", note: "한 그릇에 균형 있게 담긴 선택입니다." },
+      { id: "gimbap", category: "한식", name: "김밥", emoji: "🍙", note: "가볍고 빠르게 먹기 좋은 메뉴입니다." },
+      { id: "tteokbokki", category: "한식", name: "떡볶이", emoji: "🌶️", note: "매콤한 점심이 필요한 날입니다." },
+      { id: "samgyeopsal", category: "한식", name: "삼겹살", emoji: "🥓", note: "확실히 든든한 점심이 걸렸습니다." },
+      { id: "galbi", category: "한식", name: "갈비", emoji: "🍖", note: "고기 기분이 강한 날의 우승 메뉴입니다." },
+      { id: "fried-chicken-kr", category: "한식", name: "치킨", emoji: "🍗", note: "바삭한 점심으로 분위기를 바꿉니다." },
+      { id: "soup-rice", category: "한식", name: "국밥", emoji: "🍲", note: "뜨끈하게 한 그릇 비우기 좋습니다." },
+      { id: "curry-rice", category: "한식", name: "카레라이스", emoji: "🍛", note: "부담 없이 든든한 점심입니다." },
+      { id: "omurice", category: "한식", name: "오므라이스", emoji: "🍳", note: "부드럽고 무난한 한 접시입니다." },
+      { id: "rice-bowl", category: "한식", name: "덮밥", emoji: "🍚", note: "빠르고 안정적인 한 그릇 선택입니다." },
+      { id: "sweet-potato", category: "가벼운식", name: "고구마", emoji: "🍠", note: "가볍게 버티고 싶은 날에 좋습니다." },
+      { id: "ramen", category: "면/국물", name: "라멘", emoji: "🍜", note: "진한 국물과 면이 오늘의 답입니다." },
+      { id: "pho", category: "면/국물", name: "쌀국수", emoji: "🍜", note: "국물과 향이 깔끔하게 들어옵니다." },
+      { id: "udon", category: "면/국물", name: "우동", emoji: "🍜", note: "따뜻하고 부드러운 면 메뉴입니다." },
+      { id: "soba", category: "면/국물", name: "소바", emoji: "🍜", note: "가볍게 후루룩 먹기 좋습니다." },
+      { id: "pasta", category: "면/국물", name: "파스타", emoji: "🍝", note: "소스 있는 점심이 당첨됐습니다." },
+      { id: "spaghetti", category: "면/국물", name: "스파게티", emoji: "🍝", note: "토마토든 크림이든 만족도가 좋습니다." },
+      { id: "cold-noodle", category: "면/국물", name: "냉면", emoji: "🥣", note: "시원하게 식히는 점심입니다." },
+      { id: "kal-guksu", category: "면/국물", name: "칼국수", emoji: "🍜", note: "든든한 국물 면이 승리했습니다." },
+      { id: "jjamppong", category: "면/국물", name: "짬뽕", emoji: "🍜", note: "얼큰한 국물이 필요한 날입니다." },
+      { id: "sushi", category: "일식", name: "초밥", emoji: "🍣", note: "가볍지만 기분 좋은 점심입니다." },
+      { id: "bento", category: "일식", name: "도시락", emoji: "🍱", note: "깔끔하게 정리된 점심입니다." },
+      { id: "tempura", category: "일식", name: "튀김", emoji: "🍤", note: "바삭한 식감이 우승했습니다." },
+      { id: "onigiri", category: "일식", name: "주먹밥", emoji: "🍙", note: "간단하지만 든든한 선택입니다." },
+      { id: "oden", category: "일식", name: "오뎅", emoji: "🍢", note: "따뜻한 국물과 꼬치가 좋습니다." },
+      { id: "rice-cracker", category: "일식", name: "센베이", emoji: "🍘", note: "가벼운 간식형 점심입니다." },
+      { id: "fish-cake", category: "일식", name: "어묵", emoji: "🍥", note: "국물 메뉴와 잘 어울리는 선택입니다." },
+      { id: "dumpling", category: "중식", name: "만두", emoji: "🥟", note: "한입씩 먹기 좋은 메뉴가 걸렸습니다." },
+      { id: "takeout-box", category: "중식", name: "중식 도시락", emoji: "🥡", note: "빠르게 먹기 좋은 중식 선택입니다." },
+      { id: "fortune-cookie", category: "중식", name: "포춘쿠키", emoji: "🥠", note: "가볍게 운을 맡기는 메뉴입니다." },
+      { id: "mapo-tofu", category: "중식", name: "마파두부", emoji: "🌶️", note: "매콤하고 든든한 밥 메뉴입니다." },
+      { id: "fried-rice", category: "중식", name: "볶음밥", emoji: "🍚", note: "고소하고 빠른 점심입니다." },
+      { id: "taco", category: "서양식", name: "타코", emoji: "🌮", note: "손에 들고 먹는 재미가 있습니다." },
+      { id: "burrito", category: "서양식", name: "부리토", emoji: "🌯", note: "한 손으로 든든하게 해결합니다." },
+      { id: "tamale", category: "서양식", name: "타말레", emoji: "🫔", note: "색다른 점심 후보가 우승했습니다." },
+      { id: "falafel", category: "서양식", name: "팔라펠", emoji: "🧆", note: "고소하고 가벼운 선택입니다." },
+      { id: "kebab", category: "서양식", name: "케밥", emoji: "🥙", note: "채소와 고기가 균형 있게 들어갑니다." },
+      { id: "fondue", category: "서양식", name: "퐁듀", emoji: "🫕", note: "치즈 기분이 강한 날입니다." },
+      { id: "steak", category: "서양식", name: "스테이크", emoji: "🥩", note: "묵직한 고기 점심이 당첨됐습니다." },
+      { id: "cutlet", category: "서양식", name: "돈까스", emoji: "🍛", note: "바삭한 점심이 필요한 날입니다." },
+      { id: "pizza", category: "서양식", name: "피자", emoji: "🍕", note: "나눠 먹기 좋은 메뉴가 걸렸습니다." },
+      { id: "hamburger", category: "간편식", name: "햄버거", emoji: "🍔", note: "빠르고 확실한 선택입니다." },
+      { id: "fries", category: "간편식", name: "감자튀김", emoji: "🍟", note: "가볍게 바삭한 점심입니다." },
+      { id: "hotdog", category: "간편식", name: "핫도그", emoji: "🌭", note: "간단하고 기분 전환되는 메뉴입니다." },
+      { id: "sandwich", category: "간편식", name: "샌드위치", emoji: "🥪", note: "깔끔하게 먹고 움직이기 좋습니다." },
+      { id: "bagel", category: "간편식", name: "베이글", emoji: "🥯", note: "담백하게 채우는 점심입니다." },
+      { id: "pretzel", category: "간편식", name: "프레첼", emoji: "🥨", note: "짭짤한 간편식이 걸렸습니다." },
+      { id: "baguette", category: "간편식", name: "바게트", emoji: "🥖", note: "빵으로 가볍게 가는 날입니다." },
+      { id: "croissant", category: "간편식", name: "크루아상", emoji: "🥐", note: "버터 향이 있는 가벼운 점심입니다." },
+      { id: "toast", category: "간편식", name: "토스트", emoji: "🍞", note: "단순하지만 실패 적은 선택입니다." },
+      { id: "flatbread", category: "간편식", name: "플랫브레드", emoji: "🫓", note: "담백한 빵 메뉴가 우승했습니다." },
+      { id: "pancake", category: "간편식", name: "팬케이크", emoji: "🥞", note: "브런치 느낌으로 가는 점심입니다." },
+      { id: "waffle", category: "간편식", name: "와플", emoji: "🧇", note: "달콤한 브런치형 점심입니다." },
+      { id: "egg", category: "간편식", name: "계란", emoji: "🥚", note: "단백질 중심의 간단한 선택입니다." },
+      { id: "fried-egg", category: "간편식", name: "계란후라이", emoji: "🍳", note: "밥 위에 올리기 좋은 메뉴입니다." },
+      { id: "popcorn", category: "간편식", name: "팝콘", emoji: "🍿", note: "가벼운 간식형 선택입니다." },
+      { id: "canned-food", category: "간편식", name: "통조림", emoji: "🥫", note: "빠르게 해결하는 실용 메뉴입니다." },
+      { id: "salad", category: "가벼운식", name: "샐러드", emoji: "🥗", note: "가볍게 먹고 오후를 버티기 좋습니다." },
+      { id: "avocado", category: "가벼운식", name: "아보카도볼", emoji: "🥑", note: "부드럽고 건강한 점심입니다." },
+      { id: "tomato", category: "가벼운식", name: "토마토 샐러드", emoji: "🍅", note: "상큼한 메뉴가 선택됐습니다." },
+      { id: "corn", category: "가벼운식", name: "옥수수", emoji: "🌽", note: "달콤하고 가벼운 선택입니다." },
+      { id: "broccoli", category: "가벼운식", name: "브로콜리볼", emoji: "🥦", note: "채소 중심으로 가는 날입니다." },
+      { id: "leafy-green", category: "가벼운식", name: "그린볼", emoji: "🥬", note: "산뜻하게 정리되는 점심입니다." },
+      { id: "cucumber", category: "가벼운식", name: "오이 샐러드", emoji: "🥒", note: "시원하고 가벼운 메뉴입니다." },
+      { id: "mushroom", category: "가벼운식", name: "버섯구이", emoji: "🍄", note: "담백한 채소 메뉴가 걸렸습니다." },
+      { id: "beans", category: "가벼운식", name: "콩 샐러드", emoji: "🫘", note: "단백질과 식감이 있는 가벼운식입니다." },
+      { id: "apple", category: "디저트", name: "사과", emoji: "🍎", note: "아주 가볍게 마무리하는 선택입니다." },
+      { id: "banana", category: "디저트", name: "바나나", emoji: "🍌", note: "빠르게 에너지를 채우기 좋습니다." },
+      { id: "grapes", category: "디저트", name: "포도", emoji: "🍇", note: "상큼한 디저트형 메뉴입니다." },
+      { id: "watermelon", category: "디저트", name: "수박", emoji: "🍉", note: "시원한 디저트가 우승했습니다." },
+      { id: "strawberry", category: "디저트", name: "딸기", emoji: "🍓", note: "가볍고 상큼한 선택입니다." },
+      { id: "blueberry", category: "디저트", name: "블루베리", emoji: "🫐", note: "작게 집어 먹기 좋은 메뉴입니다." },
+      { id: "kiwi", category: "디저트", name: "키위", emoji: "🥝", note: "산뜻하게 기분을 바꿉니다." },
+      { id: "mango", category: "디저트", name: "망고", emoji: "🥭", note: "달콤한 과일 메뉴입니다." },
+      { id: "ice-cream", category: "디저트", name: "아이스크림", emoji: "🍦", note: "시원한 마무리가 필요합니다." },
+      { id: "shaved-ice", category: "디저트", name: "빙수", emoji: "🍧", note: "더운 날 강한 후보입니다." },
+      { id: "doughnut", category: "디저트", name: "도넛", emoji: "🍩", note: "달콤한 기분 전환 메뉴입니다." },
+      { id: "cookie", category: "디저트", name: "쿠키", emoji: "🍪", note: "가볍게 달달한 선택입니다." },
+      { id: "cake", category: "디저트", name: "케이크", emoji: "🍰", note: "오늘은 디저트가 주인공입니다." },
+      { id: "cupcake", category: "디저트", name: "컵케이크", emoji: "🧁", note: "작지만 확실히 달콤합니다." },
+      { id: "pie", category: "디저트", name: "파이", emoji: "🥧", note: "브런치와 디저트 사이의 선택입니다." },
+      { id: "chocolate", category: "디저트", name: "초콜릿", emoji: "🍫", note: "당 충전이 필요한 날입니다." },
+      { id: "pudding", category: "디저트", name: "푸딩", emoji: "🍮", note: "부드럽고 달콤한 메뉴입니다." }
     ];
+
+    const defaultSelectedIds = new Set([
+      "kimchi-jjigae",
+      "bibimbap",
+      "cutlet",
+      "pho",
+      "hamburger",
+      "sushi",
+      "pizza",
+      "salad"
+    ]);
 
     const board = document.querySelector("#raceBoard");
     const startButton = document.querySelector("#startButton");
     const resetButton = document.querySelector("#resetButton");
+    const selectAllButton = document.querySelector("#selectAllButton");
+    const clearButton = document.querySelector("#clearButton");
+    const randomButton = document.querySelector("#randomButton");
+    const menuSearch = document.querySelector("#menuSearch");
+    const categoryTabs = document.querySelector("#categoryTabs");
+    const menuPicker = document.querySelector("#menuPicker");
+    const selectedCount = document.querySelector("#selectedCount");
     const winnerEmoji = document.querySelector("#winnerEmoji");
     const winnerName = document.querySelector("#winnerName");
     const winnerCopy = document.querySelector("#winnerCopy");
@@ -469,6 +735,73 @@
     let lanes = [];
     let raceFrame = 0;
     let running = false;
+    let activeCategory = "전체";
+    let selectedIds = new Set(defaultSelectedIds);
+
+    function selectedMenus() {
+      return menus.filter((menu) => selectedIds.has(menu.id));
+    }
+
+    function filteredMenus() {
+      const query = menuSearch.value.trim().toLowerCase();
+      return menus.filter((menu) => {
+        const categoryMatch = activeCategory === "전체" || menu.category === activeCategory;
+        const queryMatch = !query || `${menu.name} ${menu.category}`.toLowerCase().includes(query);
+        return categoryMatch && queryMatch;
+      });
+    }
+
+    function updateSelectedCount() {
+      selectedCount.textContent = `${selectedIds.size}개 선택`;
+      startButton.disabled = selectedIds.size === 0 || running;
+    }
+
+    function renderCategories() {
+      categoryTabs.innerHTML = "";
+      categories.forEach((category) => {
+        const button = document.createElement("button");
+        button.className = "category-button";
+        button.type = "button";
+        button.textContent = category;
+        button.classList.toggle("active", category === activeCategory);
+        button.addEventListener("click", () => {
+          activeCategory = category;
+          renderCategories();
+          renderPicker();
+        });
+        categoryTabs.append(button);
+      });
+    }
+
+    function renderPicker() {
+      menuPicker.innerHTML = "";
+
+      filteredMenus().forEach((menu) => {
+        const label = document.createElement("label");
+        label.className = "menu-option";
+
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.checked = selectedIds.has(menu.id);
+        input.addEventListener("change", () => {
+          if (input.checked) selectedIds.add(menu.id);
+          else selectedIds.delete(menu.id);
+          renderMenus();
+          resetRace();
+        });
+
+        const emoji = document.createElement("span");
+        emoji.className = "emoji";
+        emoji.textContent = menu.emoji;
+
+        const name = document.createElement("span");
+        name.className = "name";
+        name.textContent = menu.name;
+
+        label.append(input, emoji, name);
+        menuPicker.append(label);
+      });
+    }
 
     function createLane(menu, index) {
       const lane = document.createElement("div");
@@ -495,7 +828,7 @@
     function renderMenus() {
       board.querySelectorAll(".lane").forEach((lane) => lane.remove());
       menuList.innerHTML = "";
-      lanes = menus.map(createLane);
+      lanes = selectedMenus().map(createLane);
 
       lanes.forEach((entry) => {
         board.append(entry.lane);
@@ -506,6 +839,7 @@
       });
 
       menuCount.textContent = `${lanes.length}개`;
+      updateSelectedCount();
       updateRunnerPositions();
     }
 
@@ -530,7 +864,7 @@
       startButton.textContent = "레이스 시작";
       winnerEmoji.textContent = "🍽️";
       winnerName.textContent = "출발 대기";
-      winnerCopy.textContent = "버튼을 누르면 메뉴들이 달리기 시작합니다.";
+      winnerCopy.textContent = lanes.length ? "선택한 메뉴들이 결승선을 향해 달립니다." : "참가 메뉴를 선택해 주세요.";
       leaderName.textContent = "-";
 
       lanes.forEach((entry) => {
@@ -541,6 +875,7 @@
       });
 
       updateRunnerPositions();
+      updateSelectedCount();
     }
 
     function pickWinner() {
@@ -548,7 +883,7 @@
     }
 
     function startRace() {
-      if (running) return;
+      if (running || lanes.length === 0) return;
 
       resetRace();
       running = true;
@@ -612,12 +947,41 @@
 
       startButton.disabled = false;
       startButton.textContent = "다시 달리기";
+      updateSelectedCount();
+    }
+
+    function selectFilteredMenus() {
+      filteredMenus().forEach((menu) => selectedIds.add(menu.id));
+      renderPicker();
+      renderMenus();
+      resetRace();
+    }
+
+    function clearFilteredMenus() {
+      filteredMenus().forEach((menu) => selectedIds.delete(menu.id));
+      renderPicker();
+      renderMenus();
+      resetRace();
+    }
+
+    function selectRandomMenus() {
+      const shuffled = [...menus].sort(() => Math.random() - 0.5);
+      selectedIds = new Set(shuffled.slice(0, 8).map((menu) => menu.id));
+      renderPicker();
+      renderMenus();
+      resetRace();
     }
 
     startButton.addEventListener("click", startRace);
     resetButton.addEventListener("click", resetRace);
+    selectAllButton.addEventListener("click", selectFilteredMenus);
+    clearButton.addEventListener("click", clearFilteredMenus);
+    randomButton.addEventListener("click", selectRandomMenus);
+    menuSearch.addEventListener("input", renderPicker);
     window.addEventListener("resize", updateRunnerPositions);
 
+    renderCategories();
+    renderPicker();
     renderMenus();
     resetRace();
   </script>
