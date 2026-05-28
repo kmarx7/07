@@ -126,7 +126,7 @@
       overflow: hidden;
       padding: 22px 24px 26px 18px;
       min-height: 612px;
-      max-height: 690px;
+      max-height: 940px;
       overflow-y: auto;
     }
 
@@ -532,7 +532,7 @@
 
       .race-board {
         min-height: auto;
-        max-height: 560px;
+        max-height: 820px;
         padding: 18px 16px 18px 10px;
       }
 
@@ -590,7 +590,7 @@
         <div class="tool-buttons">
           <button class="small-button" id="selectAllButton" type="button">전체 선택</button>
           <button class="small-button" id="clearButton" type="button">전체 해제</button>
-          <button class="small-button" id="randomButton" type="button">랜덤 8개</button>
+          <button class="small-button" id="randomButton" type="button">랜덤 10개</button>
         </div>
       </div>
       <div class="category-tabs" id="categoryTabs" aria-label="메뉴 카테고리"></div>
@@ -698,7 +698,6 @@
       { id: "broccoli", category: "가벼운식", name: "브로콜리볼", emoji: "🥦", note: "채소 중심으로 가는 날입니다." },
       { id: "leafy-green", category: "가벼운식", name: "그린볼", emoji: "🥬", note: "산뜻하게 정리되는 점심입니다." },
       { id: "cucumber", category: "가벼운식", name: "오이 샐러드", emoji: "🥒", note: "시원하고 가벼운 메뉴입니다." },
-      { id: "mushroom", category: "가벼운식", name: "버섯구이", emoji: "🍄", note: "담백한 채소 메뉴가 걸렸습니다." },
       { id: "beans", category: "가벼운식", name: "콩 샐러드", emoji: "🫘", note: "단백질과 식감이 있는 가벼운식입니다." },
       { id: "apple", category: "디저트", name: "사과", emoji: "🍎", note: "아주 가볍게 마무리하는 선택입니다." },
       { id: "banana", category: "디저트", name: "바나나", emoji: "🍌", note: "빠르게 에너지를 채우기 좋습니다." },
@@ -989,7 +988,7 @@
 
     function selectRandomMenus() {
       const shuffled = [...menus].sort(() => Math.random() - 0.5);
-      selectedIds = new Set(shuffled.slice(0, 8).map((menu) => menu.id));
+      selectedIds = new Set(shuffled.slice(0, 10).map((menu) => menu.id));
       renderPicker();
       renderMenus();
       resetRace();
